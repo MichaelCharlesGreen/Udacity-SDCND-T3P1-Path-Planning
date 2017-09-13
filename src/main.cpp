@@ -210,10 +210,12 @@ int main() {
   int lane_change_wp = 0;
   // // Move a reference velocity to target
   // double ref_vel = 49.5; //mph
+  // Move a reference velocity to target
+  double ref_vel = 0.0; //mph
 
   // h.onMessage([&map_waypoints_x,&map_waypoints_y,&map_waypoints_s,&map_waypoints_dx,&map_waypoints_dy](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
   //                    uWS::OpCode opCode) {
-  h.onMessage([&map_waypoints_x,&map_waypoints_y,&map_waypoints_s,&map_waypoints_dx,&map_waypoints_dy,&lane,&lane_change_wp](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
+  h.onMessage([&ref_vel, &map_waypoints_x,&map_waypoints_y,&map_waypoints_s,&map_waypoints_dx,&map_waypoints_dy,&lane,&lane_change_wp](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
                      uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
     // The 4 signifies a websocket message
@@ -252,9 +254,6 @@ int main() {
 
             vector<vector<double>> sensor_fusion = j[1]["sensor_fusion"];
 
-            // Move a reference velocity to target
-            double ref_vel = 49.5; //mph
-
             int prev_size = previous_path_x.size();
 
             //beginning of commented-out code
@@ -283,12 +282,22 @@ int main() {
                 {
                   // Do some logic here, lower reference velocity so we don't crash into the car in fron of us, could
                   // else flag to try to change lanes
-                  ref_vel = 29.5; //mph
-                  //too_close = true;
+                  //ref_vel = 29.5; //mph
+                  too_close = true;
                 }
 
 
               }
+            }
+
+            // .224 is about 5 meters per second squared, which is under the requirement of 10
+            if(too_close)
+            {
+              ref_vel -= .224;
+            }
+            else if(ref_vel < 49.5)
+            {
+              ref_vel += .224;
             }
 
 
