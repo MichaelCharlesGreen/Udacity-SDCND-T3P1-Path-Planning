@@ -59,7 +59,6 @@ int ClosestWaypoint(double x, double y, vector<double> maps_x, vector<double> ma
 	}
 
 	return closestWaypoint;
-
 }
 
 int NextWaypoint(double x, double y, double theta, vector<double> maps_x, vector<double> maps_y)
@@ -80,7 +79,6 @@ int NextWaypoint(double x, double y, double theta, vector<double> maps_x, vector
 	}
 
 	return closestWaypoint;
-
 }
 
 // Transform from Cartesian x,y coordinates to Frenet s,d coordinates
@@ -129,7 +127,6 @@ vector<double> getFrenet(double x, double y, double theta, vector<double> maps_x
 	frenet_s += distance(0,0,proj_x,proj_y);
 
 	return {frenet_s,frenet_d};
-
 }
 
 // Transform from Frenet s,d coordinates to Cartesian x,y
@@ -157,7 +154,6 @@ vector<double> getXY(double s, double d, vector<double> maps_s, vector<double> m
 	double y = seg_y + d*sin(perp_heading);
 
 	return {x,y};
-
 }
 
 int main() {
@@ -197,13 +193,6 @@ int main() {
   	map_waypoints_dy.push_back(d_y);
   }
 
-  
-
-
-
-
-
-  
   // 0,1,2 == left,middle,right lanes
   //start in lane 1;
   int lane = 1;
@@ -250,27 +239,34 @@ int main() {
           	double end_path_d = j[1]["end_path_d"];
 
           	// Sensor Fusion Data, a list of all other cars on the same side of the road.
-          	//auto sensor_fusion = j[1]["sensor_fusion"];
+          	auto sensor_fusion = j[1]["sensor_fusion"];
 
-            vector<vector<double>> sensor_fusion = j[1]["sensor_fusion"];
+            //vector<vector<double>> sensor_fusion = j[1]["sensor_fusion"];
 
             int prev_size = previous_path_x.size();
 
             //beginning of commented-out code
+            // sensor fusion
             if(prev_size > 0)
             {
               car_s = end_path_s;
             }
 
+            // *****
+
             bool too_close = false;
+            // X
+            // X
 
             //find ref_v to use
+            // all cars in the sensor fusion data
             for(int i =0; i < sensor_fusion.size(); i++)
             {
               //car is in my lane
               float d = sensor_fusion[i][6];
               if(d < (2+4*lane+2) && d > (2+4*lane-2))
               {
+                // X
                 double vx = sensor_fusion[i][3];
                 double vy = sensor_fusion[i][4];
                 double check_speed = sqrt(vx*vx+vy*vy);
@@ -284,9 +280,13 @@ int main() {
                   // else flag to try to change lanes
                   //ref_vel = 29.5; //mph
                   too_close = true;
+                  // If we are in the middle or right lane, slam over to the left lane as fast as we can.
+                  // TODO: fix this using finit state machine and frenet
+                  if(lane > 0)
+                  {
+                    lane = 0;
+                  }
                 }
-
-
               }
             }
 
@@ -300,15 +300,6 @@ int main() {
               ref_vel += .224;
             }
 
-
-
-
-
-
-
-
-
-
             //end of commented-out code
 
             // Create a list of widely spaced (x,y) waypoints, evenly spaced at 30m
@@ -321,7 +312,6 @@ int main() {
             double ref_x = car_x;
             double ref_y = car_y;
             double ref_yaw = deg2rad(car_yaw);
-
 
             // if previous size is almost empty, use the car as starting reference
             if(prev_size < 2)
@@ -339,7 +329,6 @@ int main() {
             // use the previous path's end point as starting reference
             else
             {
-
               // Redefine reference state as previous path end point
               ref_x = previous_path_x[prev_size-1];
               ref_y = previous_path_y[prev_size-1];
@@ -354,9 +343,6 @@ int main() {
 
               ptsy.push_back(ref_y_prev);
               ptsy.push_back(ref_y);
-
-
-
             }
             // beginning of edit
             // In frenet add evelnly 30m spaced points ahead of the starting reference
@@ -371,8 +357,7 @@ int main() {
             ptsy.push_back(next_mp0[1]);
             ptsy.push_back(next_mp1[1]);
             ptsy.push_back(next_mp2[1]);
-
-
+            // shift and rotation of the coordinate system
             for (int i = 0; i < ptsx.size(); i++ )
             {
 
@@ -403,7 +388,7 @@ int main() {
             }
 
             // Calculate how to break up spline points so that we travel
-            double target_x = 30.0;
+            double target_x = 30.0; // our horizon
             double target_y = s(target_x);
             double target_dist = sqrt((target_x)*(target_x)+(target_y)*(target_y));
 
@@ -412,6 +397,18 @@ int main() {
             // Fill up the rest of our path planner after filling it with previous points, here we will always output 50 points
             for (int i = 1; i <= 50-previous_path_x.size(); i++)
             {
+
+              // added this
+              if(ref_vel > car_speed)
+              {
+                car_speed+=.224;
+              }
+              else if(ref_vel < car_speed)
+              {
+                car_speed-=.224;
+              }
+
+
 
               double N = (target_dist/(.02*ref_vel/2.2));
               double x_point = x_add_on+(target_x)/N;
@@ -436,20 +433,39 @@ int main() {
             }
             // end of edit
 
-
-
-
-
-
           	json msgJson;
 
           	// vector<double> next_x_vals;
           	// vector<double> next_y_vals;
 
 
+            // This starts from the classroom lesson. The initial version of the code moves the car forward.
+            // double dist_inc = 0.5;
+            // for(int i = 0; i < 50; i++)
+            // {
+            //   next_x_vals.push_back(car_x+(dist_inc*i)*cos(deg2rad(car_yaw)));
+            //   next_y_vals.push_back(car_y+(dist_inc*i)*sin(deg2rad(car_yaw)));
+            // }
+            // The second version of this code uses Frenet coordinates to keep the car in its lane.
           	// TODO: define a path made up of (x,y) points that the car will visit sequentially every .02 seconds
-          	
-            // double dist_inc = 0.3;
+            // double dist_inc = 0.5;
+            // for(int i = 0; i < 50; i++)
+            // {
+            //   // we want to do i+1; otherwise, our car will be exactly where the first point is at
+            //   // and it won't be transitioning - it will be sitting still.
+            //   double next_s = car_s+(i+1)*dist_inc;
+            //   // we are in the middle lane
+            //   // the waypoints are measured from the double yellow line in the middle of the road
+            //   // so we are like 1 1/2 lanes from where the waypoints are
+            //   // from the classroom, lanes are four meters wide
+            //   double next_d = 6; // (1.5 lanes * 4 m/lane)
+            //   vector<double> xy = getXY(next_s, next_d, map_waypoints_s, map_waypoints_x, map_waypoints_y);
+
+            //   next_x_vals.push_back(xy[0]);
+            //   next_y_vals.push_back(xy[1]);    
+            // }
+            // double dist_inc = 0.3; // the distance between points; 0.5 (m) is close to 50 mph
+            // 50 points for the path planner
             // for(int i = 0; i <50; i++)
             // {
             //   double next_s = car_s+(i+1)*dist_inc;
@@ -460,8 +476,7 @@ int main() {
             //   next_y_vals.push_back(xy[1]);
             // }
 
-
-
+            // END
             msgJson["next_x"] = next_x_vals;
           	msgJson["next_y"] = next_y_vals;
 
@@ -512,83 +527,3 @@ int main() {
   }
   h.run();
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
