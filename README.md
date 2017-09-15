@@ -2,6 +2,12 @@
 Self-Driving Car Engineer Nanodegree Program
 
 ### Write-up
+
+[//]: # (Image References)
+[image1]: ./images/success_image.png
+
+![successful completion image][image1]
+
 A path planner using a spline function to generate a smooth set of waypoints for ego (the car under control) to follow.
 
 The state of the area surrounding ego is taken into consideration. A state machine is not implemented, rather simple `if` statements. See lines 305-323, 334-356, 361-384, 393-430.
