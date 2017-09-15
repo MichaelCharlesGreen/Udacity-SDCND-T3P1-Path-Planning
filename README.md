@@ -1,5 +1,30 @@
 # CarND-Path-Planning-Project
 Self-Driving Car Engineer Nanodegree Program
+
+### Write-up
+A path planner using a spline function to generate a smooth set of waypoints for ego (the car under control) to follow.
+
+The state of the area surrounding ego is taken into consideration. A state machine is not implemented, rather simple `if` statements. See lines 305-323, 334-356, 361-384, 393-430.
+
+A spline is used to create a path between two points that are spaced some distance apart. By taking into account a greater distance, jerk can be minimized.
+
+A reference speed is set and efforts are made to maintain this reference speed. If ego is stuck in traffic, it will either slow down or change lanes. If there is clear road ahead and ego is not going at least the reference speed, it will accelerate.
+
+The minimum safe distance is not what is recommended for safe driving, but it transverses the course successfully and with faster times. Also, the traffic in the simulator does not seem to be following safe distance practice so ego is going-with-the-flow in that regard.
+
+The speed of vehicles in adjacent lanes are also considered when evaluating a lane change.
+
+The acceleration and decleration values could be tweaked, as could the number of waypoints, but it has completed several successful runs with the current values so will leave it as is since it passes the criteria.
+
+The Frenet coordinate system is used to determine the positions of other cars on the road, checking lanes by `d` values and a bit of math given that a lane width is 4m, and "vertical" or "longitudinal" distance by `s` values.
+
+The code model for generating paths is described in detail in lines 483-603.
+
+A list of widely-spaced (30m) waypoints is created, interpolated with a spline and filled-in with more points that control speed. Change the coordinate system by shifting and rotating. A spline is created and `x,y` points set to it. The actual `x,y` points to be used for the planner are defined. Calculate how to break up the spline points for travel. The horizon is 30 m. The rest of the path planner is then filled to 50 points after having filled it with the previous points. Change the coordinate system by shifting and rotating. 
+
+This solution meets the minimum requiremenst for passing which are listed in the rubic and were detailed in the demonstration of the project.
+
+It would be good to implement a state machine and more sophisticated criteria for speed and lane adjustment.
    
 ### Simulator.
 You can download the Term3 Simulator which contains the Path Planning Project from the [releases tab (https://github.com/udacity/self-driving-car-sim/releases).
